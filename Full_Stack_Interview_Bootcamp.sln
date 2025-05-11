@@ -3,9 +3,31 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "notes", "notes", "{3C7E7C93-2089-4799-A0A0-C74A12F62CEA}"
+	ProjectSection(SolutionItems) = preProject
+		note.txt = note.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "codes", "codes", "{1830A9A4-59D3-475C-B406-2CA6096EBA3D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ACID_EFCore", "codes\ACID_EFCore\ACID_EFCore.csproj", "{DB9FBF0A-E279-4669-BAE5-8D2F57B00468}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DB9FBF0A-E279-4669-BAE5-8D2F57B00468}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB9FBF0A-E279-4669-BAE5-8D2F57B00468}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB9FBF0A-E279-4669-BAE5-8D2F57B00468}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB9FBF0A-E279-4669-BAE5-8D2F57B00468}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{DB9FBF0A-E279-4669-BAE5-8D2F57B00468} = {1830A9A4-59D3-475C-B406-2CA6096EBA3D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CE678511-645D-455A-B5B1-9F44DB673599}

@@ -1,0 +1,70 @@
+﻿ACID Prensipleri
+--
+Atomicity (Bölünemezlik): Transaction içindeki tüm adımlar ya tamamı başarılı olur ya da hiçbirisi uygulanmaz. Örneğin para transferinde para çekme başarılı ama yatırma başarısız olursa tüm işlem geri alınır.
+
+Consistency (Tutarlılık): Transaction öncesi ve sonrası sistemin kurallarına göre tutarlı bir durumda kalması gerekir. Örneğin hesap bakiyeleri toplamı işlem öncesi ve sonrası aynı olmalı.
+
+Isolation (Yalıtım): Aynı anda çalışan transaction’lar birbirini etkilemeden çalışmalıdır. Yani bir işlem bitmeden başka bir işlem onun ara verilerini görmemeli.
+
+Durability (Kalıcılık): Transaction başarılı bir şekilde tamamlandıktan sonra, sistem çökse bile bu değişiklikler kalıcı olur. Genelde veriler diske yazılarak sağlanır.
+
+
+Isolation Level
+--
+Read Uncommitted: Başka transaction’ların henüz commit edilmemiş verilerini okuyabilir.
+
+Read Committed: Yalnızca commit edilmiş verileri okuyabilir.
+
+RepeatableRead: Aynı anda çalışan iki client'tan biri savechanges'a geldiğinde commit olana kadar diğer transaction kitlenir. Bu sayede bir tık daha veri tutarlı hale gelir.
+
+RepeatableRead'e ek olarak tutarlılık sağlamak için select sorgusuna UPDLOCK, ROWLOCK gibi kilit getirir aynı anda ikinci bir transaction bu satırı okuyamaz bekler. Böylece iki transaction yarışa girmez (race conditions) biri biter diğeri sonra başlar.
+
+Ek olarak ikinci yöntem tabloya RowVersion kolonu eklenmesi (timestamp), transaction sonunda ef core satırın versiyonunun değişip değişmediğini kontrol eder. Değiştiyse hata(DbUpdateConcurrencyException) fırlatır işlem retry edilir veya iptal edilir.
+
+
+EfCore
+-- 
+ACID_EFCore projesi altında isolation seviyelerini değerlendirdik.
+
+
+Idempotency
+--
+Idempotency (idempotentlik), bir işlem veya API isteği birden fazla kez yapıldığında, aynı sonucu döndürmesi, yani işlemin sonucunun değişmemesi özelliğidir. Bir işlem ilk kez başarılı bir şekilde çalıştırıldığında, aynı işlem tekrar yapıldığında aynı sonuca ulaşılmalıdır. Bu, özellikle ağ hataları, yeniden gönderilen istekler (duplicate requests) gibi durumlarda önemlidir.
+
+Örneğin; Her para transferi için benzersiz bir işlem kimliği (idempotency key) oluşturulabilir.İstemci, bu işlem kimliğini gönderir ve sunucu bu kimliği kontrol eder. Aynı işlem kimliğiyle gelen bir istek, zaten tamamlanmış bir işlemle sonuçlanmaz.Bu işlem tamamlanmışsa, sunucu zaten yapılan işlemi tekrar yapmaz, başarıyla sonuçlanan bir yanıt döner.İstemciden gelen işlem kimliği, veritabanında saklanır.İşlem tamamlandığında bu işlem kimliği ile birlikte, işlem sonucu ve durumu kaydedilir.Aynı işlem kimliğiyle gelen ikinci istek, sadece mevcut işlemin sonucunu geri döndürür.
+
+Özetle; Idempotency uygulaması, bankacılık sistemlerinde kullanıcıları hatalardan korur ve veri tutarlılığını sağlar. Özellikle duplicate transaction’lar gibi hatalar, idempotent işlemlerle önlenebilir.
+
+
+Para Transferi gibi kritik yüksek trafikli bir API tasarlarken nelere dikkat edilmelidir?
+--
+Temel olarak 4 hedef önceliklidir; Veri tutarlılığı, Yüksek erişilebilirlik (kesintisiz çalışma), Ölçeklenebilirlik (aynı anda bir çok kullanıcının işlem yapmasına olanak sağlama), Performans (hızlı yanıt süreleri)
+
+Yüksek trafike ve performans için çözümler;
+- Load Balancer: API Gateway ya da Nginx gibi sistemlerle gelen yük eşit dağıtılır. Horizontal scaling yapılır (birden fazla instance).
+- Read-Write Separation: Okuma işlemleri için read replica kullanılır (örneğin sadece bakiyeye bakmak). Yazma işlemleri için master DB kullanılır.
+- Queue Tabanlı İşlem Yönetimi: Para transferi işlemi doğrudan DB’ye yazılmaz, önce bir queue’ya (Kafka, RabbitMQ) bırakılır. Arka plandaki worker bunu işler → böylece sistem daha hızlı yanıt verir.
+- Idempotency: İşlem tekrar gönderilirse sorun olmaz 
+- Dağıtık Kilitleme: Redis ile SETNX lock_account_123 şeklinde lock alarak aynı anda birden fazla çekim işlemi engellenir.
+- Eventual Consistency yerine Strong Consistency: Para transferi gibi kritik sistemlerde çoğunlukla strong consistency tercih edilir. Bu nedenle transaction yönetimi dikkatli yapılır: BeginTransaction, Commit, Rollback.
+
+Ekstra önlemler;
+- Retry Mechanism: İşlem başarısızsa belirli sayıda tekrar edilir.
+- Dead Letter Queue (DLQ): Queue'da sürekli hata veren işler DLQ'ya atılır, sonra incelenir.
+- Audit Log: Hangi kullanıcının ne zaman ne yaptığı izlenebilir olmalı.
+- Monitoring / Alerting: Prometheus, Grafana, ELK stack gibi araçlarla sistem izlenir.
+
+
+Özetle;
+- Mikroservis mimarisi tercih edilmeli.
+- Queue tabanlı asenkron mimari kullanılmalı.
+- Idempotency ve distributed locking gibi veri tutarlılığını sağlayan mekanizmalar kullanılmalı.
+- Strong consistency önemli olduğu için transaction’lar dikkatle yönetilmeli.
+- Ölçeklenebilirlik için replica, cache, load balancer, queue gibi bileşenler eklenmeli.
+
+
+
+
+
+
+
