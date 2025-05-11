@@ -62,6 +62,27 @@ Ekstra önlemler;
 - Strong consistency önemli olduğu için transaction’lar dikkatle yönetilmeli.
 - Ölçeklenebilirlik için replica, cache, load balancer, queue gibi bileşenler eklenmeli.
 
+Eventual Consistency (Nihai Tutarlılık)
+--
+Eventual consistency, dağıtık sistemlerde tüm node’ların zaman içinde (hemen değil) aynı veri durumuna ulaşacağını garanti eden bir tutarlılık modelidir. Bazı yan hizmetlerde eventual consistency olabilir. Örneğin:
+SMS bildirim gönderimi, Push notification, Loglama
+
+Distributed Transaction (Dağıtık İşlem)
+--
+Distributed Transaction, birden fazla farklı kaynağa (veritabanı, servis, mesaj kuyruğu, vb.) aynı anda yazma yapılması gereken durumlarda, bu işlemlerin tamamının ya başarılı ya da tamamen başarısız olmasını garanti altına alan bir yapıdır. (Klasik “ACID” prensiplerinin çoklu sistemler arasında da geçerli olmasını sağlamaya çalışır.)
+Yaklaşımlar;
+Klasik yaklaşım: 2-Phase Commit(2PC)
+- Prepare ve Commit aşamalarından oluşur, tüm katılımcılara işlem yapabilirim der ve herkes hazırsa commit edilir, biri hata verirse rollback yapılır.
+- Performans düşüktür.Blocking olur (kilitlenir).Modern sistemlerde (microservice) önerilmez!
+
+Modern yaklaşım: 
+Saga Pattern
+- Birden çok servis kendi local transaction’ını yapar, ve event'lerle bir sonrakine haber verir.Eğer bir adım başarısız olursa, önceki adımların “compensating transaction” ile geri alınması gerekir.
+ Outbox Pattern
+ - Uygulama, DB’ye veriyi yazar ve aynı transaction içinde bir "Outbox" tablosuna event kaydeder. Event daha sonra ayrı bir servis tarafından publish edilir.Bu sayede veri ve event tutarlılığı sağlanır.
+
+
+
 
 
 
